@@ -52,7 +52,59 @@ reg [SIZE_E:0] iWRAddr; // 605
 reg [SIZE_E:0] iRDAddr; // 605
 reg [SIZE_E:0] init; // 605
 reg [SIZE_E - 1:0] iUSAGE; // 605
-reg [WIDTH-1:0] iFIFOMem [0:2**SIZE_E-1];
+
+case (SIZE_E)
+  6:
+    begin:size64
+       reg [WIDTH-1:0] iFIFOMem [0:2**SIZE_E-1];
+
+       always @(posedge CLK or posedge RST)
+       begin
+       if ((RST ==  1'b1))
+         begin
+            Q <= (0<<0);
+         end
+         else
+         begin
+         if ((WRITE ==  1'b1 && iFULL ==  1'b0))
+           begin
+              iFIFOMem[iWRAddr[SIZE_E-1:0]] <= D;
+           end
+
+       Q <= iFIFOMem[iRDAddr[SIZE_E - 1:0]]; // 413
+             end
+
+       end
+
+    end
+  11:
+    begin:size2048
+     RAMB16_S9_S9 RAMB16_S9_S9_inst
+       (
+        .CLKA   ( CLK                      ),     // Port A Clock
+        .DOA    ( Q                        ),     // Port A 1-bit Data Output
+        .DOPA   (                          ),
+        .ADDRA  ( iRDAddr[SIZE_E - 1:0]    ),     // Port A 14-bit Address Input
+        .DIA    ( 8'b0                     ),     // Port A 1-bit Data Input
+        .DIPA   ( 1'b0                     ),
+        .ENA    ( 1'b1                     ),     // Port A RAM Enable Input
+        .SSRA   ( 1'b0                     ),     // Port A Synchronous Set/Reset Input
+        .WEA    ( 1'b0                     ),     // Port A Write Enable Input
+        .CLKB   ( CLK                      ),     // Port B Clock
+        .DOB    (                          ),     // Port B 1-bit Data Output
+        .DOPB   (                          ),
+        .ADDRB  ( iWRAddr[SIZE_E-1:0]      ),     // Port B 14-bit Address Input
+        .DIB    ( D                        ),     // Port B 1-bit Data Input
+        .DIPB   ( 1'b0                     ),
+        .ENB    ( iFULL == 1'b0            ),     // Port B RAM Enable Input
+        .SSRB   ( 1'b0                     ),     // Port B Synchronous Set/Reset Input
+        .WEB    ( WRITE                    )      // Port B Write Enable Input
+        );
+    end // block: size2048
+  default:
+    $error("FIFO size must be 6 or 11");
+
+endcase // case (SIZE_E)
    
 assign /*903*/ iFULL = (iRDAddr[SIZE_E - 1:0]  == iWRAddr[SIZE_E - 1:0] ) && (iRDAddr[SIZE_E] != iWRAddr[SIZE_E]) ?  1'b1 :   1'b0; // 905
 
@@ -97,29 +149,6 @@ if ((iRDAddr == iWRAddr))
         end
   
 end
-
-
-always @(posedge CLK or posedge RST)
-begin
-if ((RST ==  1'b1))
-  begin
-  /* block const 263 */
-     for (init = 0; init < 2**SIZE_E; init++)
-       iFIFOMem[init[SIZE_E-1:0]] <= 0;
-     Q <= (0<<0);
-  end
-  else
-  begin
-  if ((WRITE ==  1'b1 && iFULL ==  1'b0))
-    begin
-       iFIFOMem[iWRAddr[SIZE_E-1:0]] <= D;
-    end
-      
-Q <= iFIFOMem[iRDAddr[SIZE_E - 1:0]]; // 413
-      end
-  
-end
-
 
 always @(posedge CLK or posedge RST)
 begin

@@ -662,7 +662,7 @@ assign /*432*/ iTXFIFO16Full = iTXFIFOUsage[4]; // 434
 assign /*903*/ iTXFIFOFull = iFCR_FIFO64E ==  1'b0 ? iTXFIFO16Full :  iTXFIFO64Full; // 905
 assign /*903*/ iTXFIFOWrite = ((iFCR_FIFOEnable ==  1'b0 && iTXFIFOEmpty ==  1'b1) | (iFCR_FIFOEnable ==  1'b1 && iTXFIFOFull ==  1'b0)) && iTHRWrite ==  1'b1 ?  1'b1 :   1'b0; // 905
 assign /*903*/ iTXFIFOClear = iFCR_TXFIFOReset ==  1'b1 ?  1'b1 :   1'b0; // 905
-slib_fifo #(.WIDTH(11), .SIZE_E(6)) UART_RXFF (
+slib_fifo #(.WIDTH(11), .SIZE_E(11)) UART_RXFF (
 	.CLK(CLK),
 	.RST(iRST),
 	.CLEAR(iRXFIFOClear),
